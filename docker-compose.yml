@@ -5,3 +5,9 @@ services:
     build: .
     ports:
       - "5000:5000"
+
+  db:
+    image: "postgres"
+    environment:
+      POSTGRES_PASSWORD: "1234"
+      POSTGRES_USER: "docker"
