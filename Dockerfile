@@ -1,15 +1,15 @@
-FROM node
+FROM node:14 as base
 
-WORKDIR /usr/app
+WORKDIR /home/node/app
 
-COPY package*.json ./
+COPY package.json ./
 
-RUN npm install
+RUN npm i
 
 COPY . .
 
-RUN npm un build
+FROM base as production
 
-WORKDIR ./dist
+ENV NODE_PATH=./build
 
-CMD node index.js
+RUN npm run build
