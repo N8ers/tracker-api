@@ -7,13 +7,13 @@ const PORT = 5000
 const app: Express = express()
 
 app.get("/", (req: Request, res: Response): void => {
-  res.send("Jello, Tracker!")
+  res.send("Jello, Tracker! - suuup")
 })
 
 app.get("/ping", async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await client.query("SELECT NOW();")
-    res.send("RESULT! " + result)
+    res.send("Pong! DB is connected" + result)
   } catch (error: any) {
     res.send("CATCH " + error.message)
   }
