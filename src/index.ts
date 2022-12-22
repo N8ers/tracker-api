@@ -11,7 +11,6 @@ app.get("/", (req: Request, res: Response): void => {
 })
 
 app.get("/users", async (req: Request, res: Response): Promise<void> => {
-  console.log("/users endpoint is hit")
   try {
     const { rows } = await pool.query("SELECT * FROM users;")
     res.send(rows)
