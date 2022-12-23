@@ -6,6 +6,10 @@ const pool = new pg.Pool()
 const app: Express = express()
 const port = process.env.PORT || 4000
 
+app.use(bodyParser.json())
+app.use(bodyParser.raw({ type: "application/vnd.custom-type" }))
+app.use(bodyParser.text({ type: "text/html" }))
+
 app.get("/", (req: Request, res: Response): void => {
   res.send("Jello, Tracker!")
 })
@@ -27,6 +31,24 @@ app.get("/weights", async (req: Request, res: Response): Promise<void> => {
     res.send("ERROR " + error.message)
   }
 })
+
+// Eventually we want to extract the userId from a cookie or something
+app.get(
+  "/weights/:userId",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.params.userId
+      const query = `
+      SELECT * FROM weights
+      WHERE user_id = $1
+    `
+      const { rows } = await pool.query(query, [userId])
+      res.send(rows)
+    } catch (error: any) {
+      res.send("ERROR " + error.message)
+    }
+  }
+)
 
 app.get("/ping", async (req: Request, res: Response): Promise<void> => {
   try {
