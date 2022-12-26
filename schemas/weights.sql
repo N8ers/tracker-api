@@ -1,6 +1,6 @@
 CREATE TABLE weights(
   id SERIAL PRIMARY KEY,
-  weight INT,
+  weight NUMERIC (4, 1),
   date DATE,
   user_id INT,
   CONSTRAINT fk_user_id
