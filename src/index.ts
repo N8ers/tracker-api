@@ -50,6 +50,27 @@ app.get(
   }
 )
 
+// Eventually we want to extract the userId from a cookie or something
+// This is commented out as a safety check.
+// app.get("/weight-seed", async (req: Request, res: Response): Promise<void> => {
+// const { data } = require("../scripts/result.json")
+// try {
+//   const query = `
+//     INSERT INTO weights (weight, date, user_id)
+//     VALUES ($1, $2, $3)
+//     `
+//   for (const item of data) {
+//     const { weight, date } = item
+//     const userId = 1
+//     console.log(weight, date, userId)
+//     await pool.query(query, [weight, date, userId])
+//   }
+//   res.send("SUCCESS!")
+// } catch (error: any) {
+//   res.send("ERROR " + error.message)
+// }
+// })
+
 app.get("/ping", async (req: Request, res: Response): Promise<void> => {
   try {
     const { rows } = await pool.query("SELECT NOW();")
