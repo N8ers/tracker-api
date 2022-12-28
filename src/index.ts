@@ -51,6 +51,29 @@ app.get(
 )
 
 // Eventually we want to extract the userId from a cookie or something
+app.post(
+  "/todays-weight",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId, weight } = req.body
+      const date = new Date().toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+      })
+      const query = `
+        INSERT INTO weights (weight, date, user_id)
+        VALUES ($1, $2, $3)
+      `
+      const { rows } = await pool.query(query, [weight, date, userId])
+      res.send(rows)
+    } catch (error: any) {
+      res.send("ERROR " + error.message)
+    }
+  }
+)
+
+// Eventually we want to extract the userId from a cookie or something
 // This is commented out as a safety check.
 // app.get("/weight-seed", async (req: Request, res: Response): Promise<void> => {
 // const { data } = require("../scripts/result.json")
