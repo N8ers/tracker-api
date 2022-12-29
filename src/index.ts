@@ -41,6 +41,8 @@ app.get(
       const query = `
       SELECT * FROM weights
       WHERE user_id = $1
+      ORDER BY date DESC
+      LIMIT 30
     `
       const { rows } = await pool.query(query, [userId])
       res.send(rows)
