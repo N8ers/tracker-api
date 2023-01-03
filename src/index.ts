@@ -23,6 +23,25 @@ app.get("/users", async (req: Request, res: Response): Promise<void> => {
   }
 })
 
+app.post("/auth", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const query = `
+      SELECT * FROM users
+      WHERE username = $1
+    `
+
+    const { rows } = await pool.query(query, [req.body.username])
+
+    if (rows[0].password === req.body.password) {
+      res.send(rows[0])
+    } else {
+      res.status(403).send("NOT AUTHED BRO")
+    }
+  } catch (error: any) {
+    res.send("ERROR " + error.message)
+  }
+})
+
 app.get("/weights", async (req: Request, res: Response): Promise<void> => {
   try {
     const { rows } = await pool.query("SELECT * FROM weights;")
@@ -39,11 +58,11 @@ app.get(
     try {
       const userId = req.params.userId
       const query = `
-      SELECT * FROM weights
-      WHERE user_id = $1
-      ORDER BY date DESC
-      LIMIT 30
-    `
+        SELECT * FROM weights
+        WHERE user_id = $1
+        ORDER BY date DESC
+        LIMIT 30
+      `
       const { rows } = await pool.query(query, [userId])
       res.send(rows)
     } catch (error: any) {
