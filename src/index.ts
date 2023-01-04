@@ -1,6 +1,9 @@
-import express, { Express, Request, Response } from "express"
+require("dotenv").config()
+
+import express, { Express, Request, Response, NextFunction } from "express"
 import bodyParser from "body-parser"
 import pg from "pg"
+import jwt from "jsonwebtoken"
 
 const pool = new pg.Pool()
 const app: Express = express()
@@ -9,6 +12,44 @@ const port = process.env.PORT || 4000
 app.use(bodyParser.json())
 app.use(bodyParser.raw({ type: "application/vnd.custom-type" }))
 app.use(bodyParser.text({ type: "text/html" }))
+
+const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers["authorization"]
+  const token = authHeader?.split(" ")[1]
+  if (!token) {
+    return res.sendStatus(401)
+  }
+
+  try {
+    const jwtVerificationResult = jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET || ""
+    )
+    console.log(jwtVerificationResult)
+    req.user = jwtVerificationResult
+    next()
+  } catch (error) {
+    console.log("error ", error)
+    return res.sendStatus(403) // expired token
+  }
+}
+
+// its a post because we return a jwt
+app.post("/get-token", (req: Request, res: Response) => {
+  // auth user
+  const username = req.body.username
+  const user = {
+    name: username,
+  }
+  const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET as string)
+  console.log("accessToken ", accessToken)
+  res.json({ accessToekn: accessToken })
+})
+
+app.get("/test-token", authenticateToken, (req: Request, res: Response) => {
+  console.log("niiice test-token user: ", req.user)
+  res.send(req.user)
+})
 
 app.get("/", (req: Request, res: Response): void => {
   res.send("Jello, Tracker!")
