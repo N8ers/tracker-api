@@ -43,7 +43,7 @@ app.post("/get-token", (req: Request, res: Response) => {
   }
   const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET as string)
   console.log("accessToken ", accessToken)
-  res.json({ accessToekn: accessToken })
+  res.json({ accessToken })
 })
 
 app.get("/test-token", authenticateToken, (req: Request, res: Response) => {
@@ -64,6 +64,17 @@ app.get("/users", async (req: Request, res: Response): Promise<void> => {
   }
 })
 
+app.post(
+  "/auth-token",
+  authenticateToken,
+  async (req: Request, res: Response): Promise<void> => {
+    // on page load, if token is in phone storage send to authenticate
+    // if valid tokein
+    // return user
+    // else ui should route to login
+  }
+)
+
 app.post("/auth", async (req: Request, res: Response): Promise<void> => {
   try {
     const query = `
@@ -74,7 +85,14 @@ app.post("/auth", async (req: Request, res: Response): Promise<void> => {
     const { rows } = await pool.query(query, [req.body.username])
 
     if (rows[0].password === req.body.password) {
-      res.send(rows[0])
+      const user = rows[0]
+      delete user.password
+
+      const accessToken = jwt.sign(
+        user,
+        process.env.ACCESS_TOKEN_SECRET as string
+      )
+      res.json({ user, accessToken })
     } else {
       res.status(403).send("NOT AUTHED BRO")
     }
