@@ -25,35 +25,13 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
       token,
       process.env.ACCESS_TOKEN_SECRET || ""
     )
-    console.log(jwtVerificationResult)
     req.user = jwtVerificationResult
     next()
   } catch (error) {
     console.log("error ", error)
-    return res.sendStatus(403) // expired token
+    return res.sendStatus(403) // need to handle expired token
   }
 }
-
-// its a post because we return a jwt
-app.post("/get-token", (req: Request, res: Response) => {
-  // auth user
-  const username = req.body.username
-  const user = {
-    name: username,
-  }
-  const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET as string)
-  console.log("accessToken ", accessToken)
-  res.json({ accessToken })
-})
-
-app.get("/test-token", authenticateToken, (req: Request, res: Response) => {
-  console.log("niiice test-token user: ", req.user)
-  res.send(req.user)
-})
-
-app.get("/", (req: Request, res: Response): void => {
-  res.send("Jello, Tracker!")
-})
 
 app.get("/users", async (req: Request, res: Response): Promise<void> => {
   try {
@@ -68,10 +46,7 @@ app.post(
   "/auth-token",
   authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
-    // on page load, if token is in phone storage send to authenticate
-    // if valid tokein
-    // return user
-    // else ui should route to login
+    res.send(req.user)
   }
 )
 
@@ -101,21 +76,12 @@ app.post("/auth", async (req: Request, res: Response): Promise<void> => {
   }
 })
 
-app.get("/weights", async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { rows } = await pool.query("SELECT * FROM weights;")
-    res.send(rows)
-  } catch (error: any) {
-    res.send("ERROR " + error.message)
-  }
-})
-
-// Eventually we want to extract the userId from a cookie or something
 app.get(
-  "/weights/:userId",
+  "/weights",
+  authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.params.userId
+      const userId = req.user.id
       const query = `
         SELECT * FROM weights
         WHERE user_id = $1
@@ -130,12 +96,13 @@ app.get(
   }
 )
 
-// Eventually we want to extract the userId from a cookie or something
 app.post(
   "/todays-weight",
+  authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { userId, weight } = req.body
+      const { weight } = req.body
+      const userId = req.user.id
       const date = new Date().toLocaleDateString(undefined, {
         year: "numeric",
         month: "numeric",
@@ -153,35 +120,28 @@ app.post(
   }
 )
 
-// Eventually we want to extract the userId from a cookie or something
-// This is commented out as a safety check.
-// app.get("/weight-seed", async (req: Request, res: Response): Promise<void> => {
-// const { data } = require("../scripts/result.json")
-// try {
-//   const query = `
+// app.get(
+//   "/weight-seed",
+//   authenticateToken,
+//   async (req: Request, res: Response): Promise<void> => {
+//     const { data } = require("../scripts/result.json")
+//     try {
+//       const query = `
 //     INSERT INTO weights (weight, date, user_id)
 //     VALUES ($1, $2, $3)
 //     `
-//   for (const item of data) {
-//     const { weight, date } = item
-//     const userId = 1
-//     console.log(weight, date, userId)
-//     await pool.query(query, [weight, date, userId])
+//       for (const item of data) {
+//         const { weight, date } = item
+//         const userId = req.user.id
+//         console.log(weight, date, userId)
+//         await pool.query(query, [weight, date, userId])
+//       }
+//       res.send("SUCCESS!")
+//     } catch (error: any) {
+//       res.send("ERROR " + error.message)
+//     }
 //   }
-//   res.send("SUCCESS!")
-// } catch (error: any) {
-//   res.send("ERROR " + error.message)
-// }
-// })
-
-app.get("/ping", async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { rows } = await pool.query("SELECT NOW();")
-    res.send("Pong! DB is connected! " + rows[0].now)
-  } catch (error: any) {
-    res.send("CATCH " + error.message)
-  }
-})
+// )
 
 app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`)
