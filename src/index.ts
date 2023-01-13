@@ -108,15 +108,53 @@ app.post(
         month: "numeric",
         day: "numeric",
       })
-      const query = `
+      const insertQuery = `
         INSERT INTO weights (weight, date, user_id)
         VALUES ($1, $2, $3)
       `
-      const { rows } = await pool.query(query, [weight, date, userId])
-      res.send(rows)
+      await pool.query(insertQuery, [weight, date, userId])
+
+      const selectQuery = `
+        SELECT * FROM weights
+        WHERE user_id = $1
+        AND
+        date = ( SELECT current_date )
+      `
+      const { rows } = await pool.query(selectQuery, [userId])
+
+      res.send(rows[0])
     } catch (error: any) {
       res.send("ERROR " + error.message)
     }
+  }
+)
+
+app.get(
+  "/todays-weight",
+  authenticateToken,
+  async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user.id
+
+    try {
+      const query = `
+        SELECT * FROM weights
+        WHERE user_id = $1
+        AND
+        date = ( SELECT current_date )
+      `
+      const { rows } = await pool.query(query, [userId])
+      res.send(rows)
+    } catch (error: any) {
+      res.send("trouble getting todays-weight: " + error.message)
+    }
+  }
+)
+
+app.patch(
+  "/todays-weight",
+  authenticateToken,
+  async (req: Request, res: Response): Promise<void> => {
+    // TODO
   }
 )
 
