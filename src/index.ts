@@ -96,6 +96,11 @@ app.get(
   }
 )
 
+/**
+ * TODO
+ * for all the single row values, don't send an array.
+ *    I'm refering to the `/todays-weight` routes
+ */
 app.post(
   "/todays-weight",
   authenticateToken,
@@ -154,7 +159,32 @@ app.patch(
   "/todays-weight",
   authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
-    // TODO
+    const userId = req.user.id
+    const { weight } = req.body
+
+    const rowToEditQuery = `
+      SELECT * FROM weights
+      WHERE user_id = $1
+      AND
+      date = ( SELECT current_date )
+    `
+    const rowToEdit = await pool.query(rowToEditQuery, [userId])
+    const idToEdit = rowToEdit.rows[0].id
+
+    const query = `
+      UPDATE weights
+      SET weight = $1
+      WHERE id = $2
+    `
+    await pool.query(query, [weight, idToEdit])
+
+    const updatedRow = await pool.query(rowToEditQuery, [userId])
+    const result = updatedRow.rows[0]
+    res.send(result)
+    try {
+    } catch (error: any) {
+      res.send("trouble patching todays-weight: " + error.message)
+    }
   }
 )
 
