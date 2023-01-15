@@ -5,7 +5,13 @@ import bodyParser from "body-parser"
 import pg from "pg"
 import jwt from "jsonwebtoken"
 
-const pool = new pg.Pool()
+const pool = new pg.Pool({
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: 5508,
+})
 const app: Express = express()
 const port = process.env.PORT || 4000
 
